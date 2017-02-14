@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gocql/gocql"
+	"github.com/pkg/errors"
 )
 
 type Provider interface {
@@ -25,7 +26,7 @@ func (cp *CassandraProvider) Session() (Session, error) {
 	cluster.Keyspace = cp.Keyspace
 	cluster.Consistency = gocql.Quorum
 	sess, err := cluster.CreateSession()
-	return &CassandraSession{session: sess}, err
+	return &CassandraSession{session: sess}, errors.Wrap(err, "CreateSession failed")
 }
 
 func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
@@ -33,14 +34,14 @@ func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
 	cluster.Consistency = gocql.All
 	sess, err := cluster.CreateSession()
 	if err != nil {
-		return &CassandraMigrationSession{}, err
+		return &CassandraMigrationSession{}, errors.Wrap(err, "CreateSession failed")
 	}
 	err = sess.Query(fmt.Sprintf(`CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };`, cp.Keyspace)).Exec()
 	if err != nil {
-		return &CassandraMigrationSession{}, err
+		return &CassandraMigrationSession{}, errors.Wrap(err, "Query to CreateKeyspace failed")
 	}
 	cluster.Keyspace = cp.Keyspace
 	sess, err = cluster.CreateSession()
 
-	return &CassandraMigrationSession{session: sess}, err
+	return &CassandraMigrationSession{session: sess}, errors.Wrap(err, "CreateSession failed")
 }

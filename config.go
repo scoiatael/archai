@@ -24,3 +24,7 @@ func (c Config) Persistence() persistence.Provider {
 		Keyspace: c.keyspace}
 	return &provider
 }
+
+func (c Config) Version() string {
+	return Version
+}

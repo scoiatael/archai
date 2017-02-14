@@ -1,5 +1,7 @@
 package persistence
 
+import "github.com/pkg/errors"
+
 type Migration interface {
 	Run(MigrationSession) error
 }
@@ -10,7 +12,7 @@ type SimpleMigration struct {
 
 func (simpleMigration SimpleMigration) Run(session MigrationSession) error {
 	err := session.Query(simpleMigration.Query)
-	return err
+	return errors.Wrap(err, "Query to execute SimpleMigration failed")
 }
 
 var CreateEventsTable = SimpleMigration{Query: `

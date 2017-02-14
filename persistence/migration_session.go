@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gocql/gocql"
+	"github.com/pkg/errors"
 )
 
 type MigrationSession interface {
@@ -37,13 +38,13 @@ var insertMigration = fmt.Sprintf(`INSERT INTO %s (name) VALUES (?)`, migrationT
 
 func (sess *CassandraMigrationSession) ShouldRunMigration(name string) (bool, error) {
 	if err := sess.session.Query(createMigrationTable).Exec(); err != nil {
-		return false, err
+		return false, errors.Wrap(err, "Query to createMigrationTable failed")
 	}
 	log.Println("Looking for migration ", name)
 	iter := sess.session.Query(findMigration, name).Iter()
 	found := iter.Scan(nil)
 	err := iter.Close()
-	return !found, err
+	return !found, errors.Wrap(err, "Closing iterator for findMigration failed")
 }
 
 func (sess *CassandraMigrationSession) DidRunMigration(name string) error {

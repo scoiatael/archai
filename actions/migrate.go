@@ -1,7 +1,10 @@
 package actions
 
 import (
+	"fmt"
 	"log"
+
+	"github.com/pkg/errors"
 )
 
 // Migrate implements Action interface
@@ -12,22 +15,22 @@ func (a Migrate) Run(c Context) error {
 	persistenceProvider := c.Persistence()
 	migrationSession, err := persistenceProvider.MigrationSession()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Obtaining session failed")
 	}
 	for name, m := range c.Migrations() {
 		shouldRun, err := migrationSession.ShouldRunMigration(name)
 		if err != nil {
-			return err
+			return errors.Wrap(err, fmt.Sprintf("Checking if should run migration %s failed", name))
 		}
 		if shouldRun {
 			log.Println("Executing ", name)
 			err = m.Run(migrationSession)
 			if err != nil {
-				return err
+				return errors.Wrap(err, fmt.Sprintf("Running migration %s failed", name))
 			}
 			err = migrationSession.DidRunMigration(name)
 			if err != nil {
-				return err
+				return errors.Wrap(err, fmt.Sprintf("Running after-migration hook for %s failed", name))
 			}
 		}
 	}
