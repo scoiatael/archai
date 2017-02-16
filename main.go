@@ -14,7 +14,7 @@ func main() {
 	app.Version = Version
 	app.Action = func(c *cli.Context) error {
 		config := Config{keyspace: "archai_test"}
-		action := actions.ReadEvent{Stream: "testing-stream", Amount: 10}
+		action := actions.ReadEventsToStream{Stream: "testing-stream", Output: os.Stdout}
 		err := action.Run(config)
 		return err
 	}

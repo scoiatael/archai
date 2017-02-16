@@ -4,17 +4,20 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/scoiatael/archai/persistence"
 )
 
-type ReadEvent struct {
+type ReadEvents struct {
 	Stream string
 	Cursor string
 	Amount int
+
+	Output chan (persistence.Event)
 }
 
 const minTimeuuid = "00000000-0000-1000-8080-808080808080"
 
-func (re ReadEvent) Run(c Context) error {
+func (re ReadEvents) Run(c Context) error {
 	persistenceProvider := c.Persistence()
 	session, err := persistenceProvider.Session()
 	if err != nil {
@@ -25,8 +28,7 @@ func (re ReadEvent) Run(c Context) error {
 	}
 	events, err := session.ReadEvents(re.Stream, re.Cursor, re.Amount)
 	for _, ev := range events {
-		js := string(ev.Blob)
-		fmt.Printf("%s - %s: {%v} %s\n", ev.Stream, ev.ID, ev.Meta, js)
+		re.Output <- ev
 	}
 	return errors.Wrap(err, fmt.Sprintf("Error reading event from stream %s", re.Stream))
 }
