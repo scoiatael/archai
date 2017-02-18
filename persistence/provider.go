@@ -17,12 +17,12 @@ type CassandraProvider struct {
 	Keyspace string
 }
 
-func (cp *CassandraProvider) newCluster() *gocql.ClusterConfig {
+func (cp *CassandraProvider) NewCluster() *gocql.ClusterConfig {
 	return gocql.NewCluster(cp.Hosts...)
 }
 
 func (cp *CassandraProvider) Session() (Session, error) {
-	cluster := cp.newCluster()
+	cluster := cp.NewCluster()
 	cluster.Keyspace = cp.Keyspace
 	cluster.Consistency = gocql.Quorum
 	sess, err := cluster.CreateSession()
@@ -32,7 +32,7 @@ func (cp *CassandraProvider) Session() (Session, error) {
 const createKeySpace = `CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };`
 
 func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
-	cluster := cp.newCluster()
+	cluster := cp.NewCluster()
 	cluster.Consistency = gocql.All
 	sess, err := cluster.CreateSession()
 	if err != nil {

@@ -5,10 +5,11 @@ import (
 	"github.com/scoiatael/archai/persistence"
 )
 
+// Config is a context for all application actions.
 type Config struct {
-	keyspace string
-	hosts    []string
-	actions  []actions.Action
+	Keyspace string
+	Hosts    []string
+	Actions  []actions.Action
 }
 
 func (c Config) Migrations() map[string]persistence.Migration {
@@ -18,13 +19,11 @@ func (c Config) Migrations() map[string]persistence.Migration {
 }
 
 func (c Config) Persistence() persistence.Provider {
-	hosts := make([]string, 1)
-	hosts[0] = "127.0.0.1"
-	provider := persistence.CassandraProvider{Hosts: hosts,
-		Keyspace: c.keyspace}
+	provider := persistence.CassandraProvider{Hosts: c.Hosts, Keyspace: c.Keyspace}
 	return &provider
 }
 
+// Version returns current version
 func (c Config) Version() string {
 	return Version
 }

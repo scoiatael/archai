@@ -13,7 +13,7 @@ func main() {
 	app.Usage = "eventstore replacement"
 	app.Version = Version
 	app.Action = func(c *cli.Context) error {
-		config := Config{keyspace: "archai_test"}
+		config := Config{Keyspace: "archai_test", Hosts: []string{"127.0.0.1"}}
 		action := actions.ReadEventsToStream{Stream: "testing-stream", Output: os.Stdout}
 		err := action.Run(config)
 		return err

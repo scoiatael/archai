@@ -3,8 +3,6 @@ package persistence
 import (
 	"fmt"
 
-	"log"
-
 	"github.com/gocql/gocql"
 	"github.com/pkg/errors"
 )
@@ -37,11 +35,17 @@ var findMigration = fmt.Sprintf(`SELECT name FROM %s WHERE name = ? LIMIT 1`, mi
 
 var insertMigration = fmt.Sprintf(`INSERT INTO %s (name) VALUES (?)`, migrationTable)
 
-func (sess *CassandraMigrationSession) ShouldRunMigration(name string) (bool, error) {
+func (sess *CassandraMigrationSession) createMigrationTableIfNeeded() error {
 	if err := sess.Query(createMigrationTable).Exec(); err != nil {
-		return false, errors.Wrap(err, "Query to createMigrationTable failed")
+		return errors.Wrap(err, "Query to createMigrationTable failed")
 	}
-	log.Println("Looking for migration ", name)
+	return nil
+}
+
+func (sess *CassandraMigrationSession) ShouldRunMigration(name string) (bool, error) {
+	if err := sess.createMigrationTableIfNeeded(); err != nil {
+		return false, errors.Wrap(err, "Failed to create migrations table if needed")
+	}
 	iter := sess.Query(findMigration, name).Iter()
 	found := iter.Scan(nil)
 	err := iter.Close()
@@ -49,5 +53,8 @@ func (sess *CassandraMigrationSession) ShouldRunMigration(name string) (bool, er
 }
 
 func (sess *CassandraMigrationSession) DidRunMigration(name string) error {
+	if err := sess.createMigrationTableIfNeeded(); err != nil {
+		return err
+	}
 	return sess.Query(insertMigration, name).Exec()
 }
