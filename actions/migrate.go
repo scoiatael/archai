@@ -17,6 +17,7 @@ func (a Migrate) Run(c Context) error {
 	if err != nil {
 		return errors.Wrap(err, "Obtaining session failed")
 	}
+	defer migrationSession.Close()
 	for name, m := range c.Migrations() {
 		shouldRun, err := migrationSession.ShouldRunMigration(name)
 		if err != nil {

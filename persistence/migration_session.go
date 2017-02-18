@@ -12,15 +12,16 @@ import (
 type MigrationSession interface {
 	ShouldRunMigration(string) (bool, error)
 	DidRunMigration(string) error
-	Query(string) error
+	Exec(string) error
+	Close()
 }
 
 type CassandraMigrationSession struct {
-	session *gocql.Session
+	*gocql.Session
 }
 
-func (sess *CassandraMigrationSession) Query(query string) error {
-	return sess.session.Query(query).Exec()
+func (sess *CassandraMigrationSession) Exec(query string) error {
+	return sess.Query(query).Exec()
 }
 
 const migrationTable = "archai_migrations"
@@ -37,16 +38,16 @@ var findMigration = fmt.Sprintf(`SELECT name FROM %s WHERE name = ? LIMIT 1`, mi
 var insertMigration = fmt.Sprintf(`INSERT INTO %s (name) VALUES (?)`, migrationTable)
 
 func (sess *CassandraMigrationSession) ShouldRunMigration(name string) (bool, error) {
-	if err := sess.session.Query(createMigrationTable).Exec(); err != nil {
+	if err := sess.Query(createMigrationTable).Exec(); err != nil {
 		return false, errors.Wrap(err, "Query to createMigrationTable failed")
 	}
 	log.Println("Looking for migration ", name)
-	iter := sess.session.Query(findMigration, name).Iter()
+	iter := sess.Query(findMigration, name).Iter()
 	found := iter.Scan(nil)
 	err := iter.Close()
 	return !found, errors.Wrap(err, "Closing iterator for findMigration failed")
 }
 
 func (sess *CassandraMigrationSession) DidRunMigration(name string) error {
-	return sess.session.Query(insertMigration, name).Exec()
+	return sess.Query(insertMigration, name).Exec()
 }

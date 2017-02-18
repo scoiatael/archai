@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/scoiatael/archai/persistence"
+	"github.com/scoiatael/archai/types"
 )
 
 type ReadEvents struct {
@@ -12,7 +12,7 @@ type ReadEvents struct {
 	Cursor string
 	Amount int
 
-	Output chan (persistence.Event)
+	Output chan (types.Event)
 }
 
 const minTimeuuid = "00000000-0000-1000-8080-808080808080"
@@ -23,6 +23,7 @@ func (re ReadEvents) Run(c Context) error {
 	if err != nil {
 		return errors.Wrap(err, "Obtaining session failed")
 	}
+	defer session.Close()
 	if len(re.Cursor) == 0 {
 		re.Cursor = minTimeuuid
 	}

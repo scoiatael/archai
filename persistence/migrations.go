@@ -11,7 +11,7 @@ type SimpleMigration struct {
 }
 
 func (simpleMigration SimpleMigration) Run(session MigrationSession) error {
-	err := session.Query(simpleMigration.Query)
+	err := session.Exec(simpleMigration.Query)
 	return errors.Wrap(err, "Query to execute SimpleMigration failed")
 }
 

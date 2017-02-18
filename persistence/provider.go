@@ -26,8 +26,10 @@ func (cp *CassandraProvider) Session() (Session, error) {
 	cluster.Keyspace = cp.Keyspace
 	cluster.Consistency = gocql.Quorum
 	sess, err := cluster.CreateSession()
-	return &CassandraSession{session: sess}, errors.Wrap(err, "CreateSession failed")
+	return &CassandraSession{sess}, errors.Wrap(err, "CreateSession failed")
 }
+
+const createKeySpace = `CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };`
 
 func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
 	cluster := cp.newCluster()
@@ -36,12 +38,12 @@ func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
 	if err != nil {
 		return &CassandraMigrationSession{}, errors.Wrap(err, "CreateSession failed")
 	}
-	err = sess.Query(fmt.Sprintf(`CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };`, cp.Keyspace)).Exec()
+	err = sess.Query(fmt.Sprintf(createKeySpace, cp.Keyspace)).Exec()
 	if err != nil {
 		return &CassandraMigrationSession{}, errors.Wrap(err, "Query to CreateKeyspace failed")
 	}
 	cluster.Keyspace = cp.Keyspace
 	sess, err = cluster.CreateSession()
 
-	return &CassandraMigrationSession{session: sess}, errors.Wrap(err, "CreateSession failed")
+	return &CassandraMigrationSession{sess}, errors.Wrap(err, "CreateSession failed")
 }

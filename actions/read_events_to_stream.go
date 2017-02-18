@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/scoiatael/archai/persistence"
+	"github.com/scoiatael/archai/types"
 )
 
 type ReadEventsToStream struct {
@@ -15,7 +15,7 @@ type ReadEventsToStream struct {
 	Output io.Writer
 }
 
-func printEventToStream(out io.Writer, ev persistence.Event) error {
+func printEventToStream(out io.Writer, ev types.Event) error {
 	js := string(ev.Blob)
 	str := fmt.Sprintf("%s - %s: {%v} %s\n", ev.Stream, ev.ID, ev.Meta, js)
 	_, err := out.Write([]byte(str))
@@ -23,7 +23,7 @@ func printEventToStream(out io.Writer, ev persistence.Event) error {
 }
 
 func (res ReadEventsToStream) Run(c Context) error {
-	ch := make(chan (persistence.Event), 100)
+	ch := make(chan (types.Event), 100)
 	err := ReadEvents{Stream: res.Stream, Cursor: res.Cursor, Amount: 10, Output: ch}.Run(c)
 	if err != nil {
 		return err
