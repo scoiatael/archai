@@ -10,7 +10,6 @@ import (
 type ReadEventsToStream struct {
 	Stream string
 	Cursor string
-	Amount int
 
 	Output io.Writer
 }
@@ -23,12 +22,14 @@ func printEventToStream(out io.Writer, ev types.Event) error {
 }
 
 func (res ReadEventsToStream) Run(c Context) error {
-	ch := make(chan (types.Event), 100)
-	err := ReadEvents{Stream: res.Stream, Cursor: res.Cursor, Amount: 10, Output: ch}.Run(c)
+	action := ReadEvents{Stream: res.Stream, Cursor: res.Cursor, Amount: 10}
+	err := action.Run(c)
+	events := action.Events
 	if err != nil {
 		return err
 	}
-	for ev := range ch {
+	res.Output.Write([]byte(fmt.Sprintln("STREAM -- ID -- Meta -- Blob")))
+	for _, ev := range events {
 		err := printEventToStream(res.Output, ev)
 		if err != nil {
 			return err

@@ -12,12 +12,12 @@ type ReadEvents struct {
 	Cursor string
 	Amount int
 
-	Output chan (types.Event)
+	Events []types.Event
 }
 
 const minTimeuuid = "00000000-0000-1000-8080-808080808080"
 
-func (re ReadEvents) Run(c Context) error {
+func (re *ReadEvents) Run(c Context) error {
 	persistenceProvider := c.Persistence()
 	session, err := persistenceProvider.Session()
 	if err != nil {
@@ -28,8 +28,6 @@ func (re ReadEvents) Run(c Context) error {
 		re.Cursor = minTimeuuid
 	}
 	events, err := session.ReadEvents(re.Stream, re.Cursor, re.Amount)
-	for _, ev := range events {
-		re.Output <- ev
-	}
+	re.Events = events
 	return errors.Wrap(err, fmt.Sprintf("Error reading event from stream %s", re.Stream))
 }

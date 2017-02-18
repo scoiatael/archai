@@ -38,6 +38,7 @@ func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
 	if err != nil {
 		return &CassandraMigrationSession{}, errors.Wrap(err, "CreateSession failed")
 	}
+	defer sess.Close()
 	err = sess.Query(fmt.Sprintf(createKeySpace, cp.Keyspace)).Exec()
 	if err != nil {
 		return &CassandraMigrationSession{}, errors.Wrap(err, "Query to CreateKeyspace failed")

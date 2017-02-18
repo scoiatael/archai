@@ -1,7 +1,10 @@
 package main
 
 import (
+	"log"
+
 	"github.com/scoiatael/archai/actions"
+	"github.com/scoiatael/archai/http"
 	"github.com/scoiatael/archai/persistence"
 )
 
@@ -10,6 +13,11 @@ type Config struct {
 	Keyspace string
 	Hosts    []string
 	Actions  []actions.Action
+}
+
+func (c Config) HandleErr(err error) {
+	log.Print(err)
+	panic(err)
 }
 
 func (c Config) Migrations() map[string]persistence.Migration {
@@ -26,4 +34,18 @@ func (c Config) Persistence() persistence.Provider {
 // Version returns current version
 func (c Config) Version() string {
 	return Version
+}
+
+func (c Config) HttpHandler() actions.HttpHandler {
+	return &http.FastHttpHandler{Context: c}
+}
+
+func (c Config) Run() error {
+	for _, a := range c.Actions {
+		err := a.Run(c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
