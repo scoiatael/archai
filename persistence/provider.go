@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gocql/gocql"
 	"github.com/pkg/errors"
@@ -33,6 +34,7 @@ const createKeySpace = `CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'c
 
 func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
 	cluster := cp.NewCluster()
+	cluster.Timeout = 2000 * time.Millisecond
 	cluster.Consistency = gocql.All
 	sess, err := cluster.CreateSession()
 	if err != nil {
