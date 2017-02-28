@@ -18,12 +18,10 @@ type ReadEvents struct {
 const minTimeuuid = "00000000-0000-1000-8080-808080808080"
 
 func (re *ReadEvents) Run(c Context) error {
-	persistenceProvider := c.Persistence()
-	session, err := persistenceProvider.Session()
+	session, err := c.Persistence().Session()
 	if err != nil {
 		return errors.Wrap(err, "Obtaining session failed")
 	}
-	defer session.Close()
 	if len(re.Cursor) == 0 {
 		re.Cursor = minTimeuuid
 	}

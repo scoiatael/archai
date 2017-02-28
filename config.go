@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/scoiatael/archai/actions"
@@ -10,9 +11,11 @@ import (
 
 // Config is a context for all application actions.
 type Config struct {
-	Keyspace string
-	Hosts    []string
-	Actions  []actions.Action
+	Keyspace    string
+	Hosts       []string
+	Actions     []actions.Action
+	provider    persistence.Provider
+	initialized bool
 }
 
 func (c Config) HandleErr(err error) {
@@ -21,13 +24,15 @@ func (c Config) HandleErr(err error) {
 
 func (c Config) Migrations() map[string]persistence.Migration {
 	m := make(map[string]persistence.Migration)
-	m["create_events_table"] = persistence.CreateEventsTable
+	m["001_create_events_table"] = persistence.CreateEventsTable
 	return m
 }
 
 func (c Config) Persistence() persistence.Provider {
-	provider := persistence.CassandraProvider{Hosts: c.Hosts, Keyspace: c.Keyspace}
-	return &provider
+	if !c.initialized {
+		panic(fmt.Errorf("Persistence not initialized!"))
+	}
+	return c.provider
 }
 
 // Version returns current version
@@ -39,7 +44,21 @@ func (c Config) HttpHandler() actions.HttpHandler {
 	return http.NewIris(c)
 }
 
+func (c *Config) Init() error {
+	new_provider := persistence.CassandraProvider{Hosts: c.Hosts, Keyspace: c.Keyspace}
+	err := new_provider.Init()
+	if err != nil {
+		return err
+	}
+	c.provider = &new_provider
+	c.initialized = true
+	return nil
+}
+
 func (c Config) Run() error {
+	if err := c.Init(); err != nil {
+		return err
+	}
 	for _, a := range c.Actions {
 		err := a.Run(c)
 		if err != nil {

@@ -12,8 +12,7 @@ type Migrate struct{}
 
 // Run all migrations
 func (a Migrate) Run(c Context) error {
-	persistenceProvider := c.Persistence()
-	migrationSession, err := persistenceProvider.MigrationSession()
+	migrationSession, err := c.Persistence().MigrationSession()
 	if err != nil {
 		return errors.Wrap(err, "Obtaining session failed")
 	}

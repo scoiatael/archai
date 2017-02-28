@@ -54,6 +54,9 @@ func randomString() string {
 var _ = BeforeSuite(func() {
 	var err error
 	provider = CassandraProvider{Hosts: []string{"127.0.0.1"}, Keyspace: testingKeyspace}
+	if err := provider.Init(); err != nil {
+		panic(err)
+	}
 	cluster := provider.NewCluster()
 	cluster.Consistency = gocql.All
 	root_sess, err = cluster.CreateSession()
@@ -99,10 +102,6 @@ var _ = Describe("Persistence", func() {
 			sess, err = provider.MigrationSession()
 			Expect(err).NotTo(HaveOccurred())
 		})
-
-		// AfterEach(func() {
-		// 	sess.Close()
-		// })
 
 		Context("when there's no migration table", func() {
 			It("creates migration table", func() {
@@ -161,9 +160,6 @@ var _ = Describe("Persistence", func() {
 
 			sess, err = provider.Session()
 			Expect(err).NotTo(HaveOccurred())
-		})
-		AfterEach(func() {
-			sess.Close()
 		})
 		Context("when there are no events", func() {
 			It("returns empty array", func() {
