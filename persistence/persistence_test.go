@@ -1,13 +1,11 @@
-package main_test
+package persistence_test
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 
-	. "github.com/scoiatael/archai"
 	. "github.com/scoiatael/archai/persistence"
 	"github.com/scoiatael/archai/types"
+	"github.com/scoiatael/archai/util"
 
 	"github.com/gocql/gocql"
 	. "github.com/onsi/ginkgo"
@@ -19,7 +17,6 @@ const testingKeyspace = "archai_test"
 const findKeyspace = `select keyspace_name from system_schema.keyspaces where keyspace_name = ?`
 
 var (
-	config    Config
 	provider  CassandraProvider
 	root_sess *gocql.Session
 )
@@ -50,21 +47,13 @@ func migrationTableExists() (bool, error) {
 	return exists, err
 }
 
-const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
 func randomString() string {
-	b := make([]byte, 10)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
+	return util.RandomString(10)
 }
 
 var _ = BeforeSuite(func() {
 	var err error
-	rand.Seed(time.Now().UnixNano())
-	config = Config{Keyspace: testingKeyspace, Hosts: []string{"127.0.0.1"}}
-	provider = CassandraProvider{Hosts: config.Hosts, Keyspace: config.Keyspace}
+	provider = CassandraProvider{Hosts: []string{"127.0.0.1"}, Keyspace: testingKeyspace}
 	cluster := provider.NewCluster()
 	cluster.Consistency = gocql.All
 	root_sess, err = cluster.CreateSession()
@@ -156,7 +145,7 @@ var _ = Describe("Persistence", func() {
 		})
 	})
 
-	Describe("ReadEvents", func() {
+	Describe("ReadEvents & WriteEvent", func() {
 		var (
 			sess Session
 		)
@@ -217,6 +206,33 @@ var _ = Describe("Persistence", func() {
 					Expect(events).To(HaveLen(1))
 				})
 			})
+		})
+		Describe("WriteEvent", func() {
+			Measure("small events", func(b Benchmarker) {
+				var (
+					err    error
+					stream string
+				)
+				b.Time("", func() {
+					stream = randomString()
+					err = sess.WriteEvent(stream, []byte(`{ "a": 1 }`), make(map[string]string))
+					Expect(err).NotTo(HaveOccurred())
+				})
+			}, 20)
+
+			Measure("big events", func(b Benchmarker) {
+				var (
+					err    error
+					stream string
+					blob   []byte
+				)
+				blob = make([]byte, 1024*1024)
+				b.Time("", func() {
+					stream = randomString()
+					err = sess.WriteEvent(stream, blob, make(map[string]string))
+					Expect(err).NotTo(HaveOccurred())
+				})
+			}, 1)
 		})
 	})
 })

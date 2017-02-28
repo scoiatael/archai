@@ -25,6 +25,7 @@ func (hs HttpServer) Run(c Context) error {
 			c.HandleErr(err)
 			ctx.ServerErr(err)
 		} else {
+			root := make(map[string]interface{})
 			events := make([]map[string]interface{}, len(action.Events))
 			for i, ev := range action.Events {
 				events[i] = make(map[string]interface{})
@@ -37,7 +38,8 @@ func (hs HttpServer) Run(c Context) error {
 				}
 				events[i]["blob"] = payload
 			}
-			ctx.SendJson(events)
+			root["results"] = events
+			ctx.SendJson(root)
 		}
 	})
 	handler.Post("/stream/:id", func(ctx http.PostContext) {
@@ -65,6 +67,10 @@ func (hs HttpServer) Run(c Context) error {
 			ctx.SendJson("OK")
 		}
 	})
+
 	connString := fmt.Sprintf("%s:%d", hs.Addr, hs.Port)
 	return errors.Wrap(handler.Run(connString), "HttpServer starting..")
+}
+
+func (hs HttpServer) Stop() {
 }

@@ -48,7 +48,11 @@ func (hc IrisPostContext) JsonBodyParams() (map[string]interface{}, error) {
 	err := hc.ReadJSON(&sess)
 
 	if err != nil {
-		hc.JSON(iris.StatusBadRequest, iris.Map{"error": "expected JSON body"})
+		hc.JSON(iris.StatusBadRequest,
+			iris.Map{"error": "expected JSON body",
+				"details":  err,
+				"received": hc.Request.Body,
+			})
 	}
 	return sess, err
 }
