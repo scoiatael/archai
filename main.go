@@ -15,9 +15,10 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		config := Config{Keyspace: "archai_test", Hosts: []string{"127.0.0.1"}}
 		config.Actions = []actions.Action{
+			actions.Migrate{},
 			//actions.WriteEventFromStream{Stream: "test-stream", Input: os.Stdin},
 			actions.ReadEventsToStream{Stream: "test-stream", Output: os.Stdout},
-			actions.HttpServer{Port: 8080},
+			actions.HttpServer{Port: 8080, Addr: "127.0.0.1"},
 		}
 		return config.Run()
 	}

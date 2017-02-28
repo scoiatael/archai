@@ -17,7 +17,6 @@ type Config struct {
 
 func (c Config) HandleErr(err error) {
 	log.Print(err)
-	panic(err)
 }
 
 func (c Config) Migrations() map[string]persistence.Migration {
@@ -37,7 +36,7 @@ func (c Config) Version() string {
 }
 
 func (c Config) HttpHandler() actions.HttpHandler {
-	return &http.FastHttpHandler{Context: c}
+	return http.NewIris(c)
 }
 
 func (c Config) Run() error {

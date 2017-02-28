@@ -1,11 +1,8 @@
 package actions
 
 import (
-	"fmt"
-
 	"encoding/json"
-
-	"log"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/scoiatael/archai/http"
@@ -19,9 +16,9 @@ type HttpServer struct {
 func (hs HttpServer) Run(c Context) error {
 	handler := c.HttpHandler()
 	handler.Get("/stream/:id", func(ctx http.GetContext) {
-		stream := ctx.GetSegment(":id")
+		stream := ctx.GetSegment("id")
 		action := ReadEvents{Stream: stream}
-		action.Cursor = ctx.StringParam("stream")
+		action.Cursor = ctx.StringParam("cursor")
 		action.Amount = ctx.IntParam("amount", 10)
 		err := action.Run(c)
 		if err != nil {
@@ -45,13 +42,12 @@ func (hs HttpServer) Run(c Context) error {
 	})
 	handler.Post("/stream/:id", func(ctx http.PostContext) {
 		var err error
-		stream := ctx.GetSegment(":id")
+		stream := ctx.GetSegment("id")
 		body, err := ctx.JsonBodyParams()
 		if err != nil {
-			// Error was already send
+			// Error was already sent
 			return
 		}
-		log.Println("Got ", body)
 		payload, err := json.Marshal(body)
 		if err != nil {
 			c.HandleErr(err)

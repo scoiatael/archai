@@ -2,12 +2,9 @@ package http
 
 import (
 	"encoding/json"
-
 	"fmt"
-
-	"strings"
-
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
