@@ -9,5 +9,4 @@ siege:
 	bash scripts/siege.sh
 
 test:
-	go test
-	cd persistence && go test
+	ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --progress

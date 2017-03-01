@@ -4,6 +4,8 @@
 *.so
 archai
 
+*.coverprofile
+
 # Folders
 _obj
 _test

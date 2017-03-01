@@ -72,22 +72,8 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("Persistence", func() {
 	Describe("MigrationSession", func() {
-		It("creates keyspace", func() {
-			var (
-				exists bool
-				err    error
-			)
-			exists, err = testingKeyspaceExists()
-			Expect(err).NotTo(HaveOccurred())
-			if exists {
-				Skip("Testing keyspace already exists; drop it to run this test")
-			}
-
-			sess, err := provider.MigrationSession()
-			Expect(err).NotTo(HaveOccurred())
-			defer sess.Close()
-
-			exists, err = testingKeyspaceExists()
+		It("ensures keyspace is created", func() {
+			exists, err := testingKeyspaceExists()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exists).To(BeTrue())
 
@@ -228,7 +214,7 @@ var _ = Describe("Persistence", func() {
 					err = sess.WriteEvent(stream, blob, make(map[string]string))
 					Expect(err).NotTo(HaveOccurred())
 				})
-			}, 1)
+			}, 10)
 		})
 	})
 })

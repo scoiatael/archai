@@ -1,41 +1,24 @@
 package actions
 
 import (
-	"encoding/json"
+	"bufio"
 	"io"
 
 	"github.com/pkg/errors"
+	"github.com/scoiatael/archai/simplejson"
 )
 
 type WriteEventFromStream struct {
 	Stream string
-	Input  io.Reader
+	Input  bufio.Reader
 }
 
-// Read up to Mb from stream
-const MAX_READ = 1024 * 1024
-
-func readJSONFromStream(input io.Reader) ([]byte, error) {
-	inputBuf := make([]byte, MAX_READ)
-	_, err := input.Read(inputBuf)
+func readJSONFromStream(input bufio.Reader) ([]byte, error) {
+	buf, err := input.ReadBytes('\n')
 	if err != nil {
-		return inputBuf, errors.Wrap(err, "Input read failed")
+		return buf, err
 	}
-	for i, v := range inputBuf {
-		if v == '\x00' {
-			inputBuf = inputBuf[:i]
-			break
-		}
-	}
-	var js map[string]interface{}
-	err = json.Unmarshal(inputBuf, &js)
-	if err != nil {
-		return inputBuf, errors.Wrap(err, "Input is not JSON")
-	}
-	out, err := json.Marshal(js)
-	if err != nil {
-		return inputBuf, errors.Wrap(err, "Marshalling as JSON failed")
-	}
+	out, err := simplejson.Validate(buf)
 	return out, nil
 }
 
@@ -44,9 +27,17 @@ func (wes WriteEventFromStream) Run(c Context) error {
 	we.Meta["origin"] = "stream"
 	we.Meta["compressed"] = "false"
 	var err error
-	we.Payload, err = readJSONFromStream(wes.Input)
-	if err != nil {
-		return errors.Wrap(err, "Failed reading input")
+	for {
+		we.Payload, err = readJSONFromStream(wes.Input)
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return errors.Wrap(err, "Failed reading input")
+		}
+		err = errors.Wrap(we.Run(c), "Failed running WriteEvent action")
+		if err != nil {
+			return err
+		}
 	}
-	return errors.Wrap(we.Run(c), "Failed running WriteEvent action")
 }

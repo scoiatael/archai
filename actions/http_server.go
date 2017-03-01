@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/scoiatael/archai/http"
+	"github.com/scoiatael/archai/simplejson"
 )
 
 type HttpServer struct {
@@ -25,13 +26,12 @@ func (hs HttpServer) Run(c Context) error {
 			c.HandleErr(err)
 			ctx.ServerErr(err)
 		} else {
-			root := make(map[string]interface{})
-			events := make([]map[string]interface{}, len(action.Events))
+			root := make(simplejson.Object)
+			events := make(simplejson.ObjectArray, len(action.Events))
 			for i, ev := range action.Events {
-				events[i] = make(map[string]interface{})
+				events[i] = make(simplejson.Object)
 				events[i]["ID"] = ev.ID
-				payload := make(map[string]interface{})
-				err := json.Unmarshal(ev.Blob, &payload)
+				payload, err := simplejson.Read(ev.Blob)
 				if err != nil {
 					c.HandleErr(err)
 					ctx.ServerErr(err)
