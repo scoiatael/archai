@@ -39,6 +39,7 @@ func (hs HttpServer) Run(c Context) error {
 				events[i]["blob"] = payload
 			}
 			root["results"] = events
+			c.Telemetry().Incr("read", []string{"stream:" + stream})
 			ctx.SendJson(root)
 		}
 	})
@@ -64,6 +65,7 @@ func (hs HttpServer) Run(c Context) error {
 			c.HandleErr(err)
 			ctx.ServerErr(err)
 		} else {
+			c.Telemetry().Incr("write", []string{"stream:" + stream})
 			ctx.SendJson("OK")
 		}
 	})

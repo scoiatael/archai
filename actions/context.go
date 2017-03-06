@@ -3,6 +3,7 @@ package actions
 import (
 	"github.com/scoiatael/archai/http"
 	"github.com/scoiatael/archai/persistence"
+	"github.com/scoiatael/archai/telemetry"
 )
 
 type HttpHandler interface {
@@ -17,6 +18,7 @@ type Context interface {
 	Version() string
 	HandleErr(error)
 	HttpHandler() HttpHandler
+	Telemetry() telemetry.Datadog
 }
 
 type Action interface {

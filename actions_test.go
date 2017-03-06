@@ -26,6 +26,7 @@ var _ = BeforeSuite(func() {
 	config = Config{}
 	config.Hosts = []string{"127.0.0.1"}
 	config.Keyspace = testingKeyspace
+	config.StatsdAddr = "dd-agent.service.consul:8125"
 	err := config.Init()
 	if err != nil {
 		panic(err)

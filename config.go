@@ -7,19 +7,25 @@ import (
 	"github.com/scoiatael/archai/actions"
 	"github.com/scoiatael/archai/http"
 	"github.com/scoiatael/archai/persistence"
+	"github.com/scoiatael/archai/telemetry"
 )
 
 // Config is a context for all application actions.
 type Config struct {
-	Keyspace    string
-	Hosts       []string
-	Actions     []actions.Action
+	Keyspace   string
+	Hosts      []string
+	Actions    []actions.Action
+	StatsdAddr string
+	Features   map[string]bool
+
 	provider    persistence.Provider
+	telemetry   telemetry.Datadog
 	initialized bool
 }
 
 func (c Config) HandleErr(err error) {
 	log.Print(err)
+	c.Telemetry().Failure("server_error", err.Error())
 }
 
 func (c Config) Migrations() map[string]persistence.Migration {
@@ -30,9 +36,16 @@ func (c Config) Migrations() map[string]persistence.Migration {
 
 func (c Config) Persistence() persistence.Provider {
 	if !c.initialized {
-		panic(fmt.Errorf("Persistence not initialized!"))
+		panic(fmt.Errorf("Config not initialized!"))
 	}
 	return c.provider
+}
+
+func (c Config) Telemetry() telemetry.Datadog {
+	if !c.initialized {
+		panic(fmt.Errorf("Config not initialized!"))
+	}
+	return c.telemetry
 }
 
 // Version returns current version
@@ -41,7 +54,7 @@ func (c Config) Version() string {
 }
 
 func (c Config) HttpHandler() actions.HttpHandler {
-	return http.NewIris(c)
+	return http.NewIris(c, c.Features["dev_logger"])
 }
 
 func (c *Config) Init() error {
@@ -51,6 +64,10 @@ func (c *Config) Init() error {
 		return err
 	}
 	c.provider = &new_provider
+
+	dd := telemetry.NewDatadog(c.StatsdAddr, c.Keyspace)
+	c.telemetry = dd
+
 	c.initialized = true
 	return nil
 }

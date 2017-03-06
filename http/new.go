@@ -5,14 +5,18 @@ import (
 	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
 )
 
-func NewIris(c Context) *IrisHandler {
+func NewIris(c Context, useDevLogger bool) *IrisHandler {
 	handler := IrisHandler{}
 	handler.context = c
 
 	app := iris.New()
+	if useDevLogger {
+		app.Adapt(
+			// adapt a logger which prints all errors to the os.Stdout
+			iris.DevLogger(),
+		)
+	}
 	app.Adapt(
-		// adapt a logger which prints all errors to the os.Stdout
-		iris.DevLogger(),
 		// adapt the adaptors/httprouter or adaptors/gorillamux
 		httprouter.New(),
 	)
