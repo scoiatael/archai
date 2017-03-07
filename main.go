@@ -37,6 +37,11 @@ func main() {
 			Value: "127.0.0.1",
 			Usage: "Address to listen on",
 		},
+		cli.StringFlag{
+			Name:  "telemetry",
+			Value: "127.0.0.1",
+			Usage: "Address to send metrics to",
+		},
 		cli.Int64Flag{
 			Name:  "port",
 			Value: 8080,
@@ -46,8 +51,10 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		config := Config{}
 		config.Features = make(map[string]bool)
+
 		config.Keyspace = c.String("keyspace")
 		config.Hosts = strings.Split(c.String("hosts"), ",")
+		config.StatsdAddr = c.String("telemetry")
 		if c.Bool("migrate") {
 			config.Append(actions.Migrate{})
 		}
