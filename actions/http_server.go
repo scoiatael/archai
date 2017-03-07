@@ -76,3 +76,7 @@ func (hs HttpServer) Run(c Context) error {
 
 func (hs HttpServer) Stop() {
 }
+
+func (hs HttpServer) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fmt.Sprintf("Start HTTP server on %s:%d", hs.Addr, hs.Port))
+}

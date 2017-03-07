@@ -29,3 +29,7 @@ func (re *ReadEvents) Run(c Context) error {
 	re.Events = events
 	return errors.Wrap(err, fmt.Sprintf("Error reading event from stream %s", re.Stream))
 }
+
+func (re *ReadEvents) MarshalJSON() ([]byte, error) {
+	return []byte(`"Read events"`), nil
+}

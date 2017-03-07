@@ -1,5 +1,5 @@
 run: archai
-	./archai
+	./archai $(ARGS)
 
 
 archai: $(shell find . -type f -regex .*go$)

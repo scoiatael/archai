@@ -52,3 +52,7 @@ func (res ReadEventsToStream) Run(c Context) error {
 	}
 	return nil
 }
+
+func (res ReadEventsToStream) MarshalJSON() ([]byte, error) {
+	return []byte(`"Print events from Cassandra to output stream"`), nil
+}

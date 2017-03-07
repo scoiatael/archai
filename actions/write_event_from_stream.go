@@ -41,3 +41,7 @@ func (wes WriteEventFromStream) Run(c Context) error {
 		}
 	}
 }
+
+func (wes WriteEventFromStream) MarshalJSON() ([]byte, error) {
+	return []byte(`"Read event from input and insert into Cassandra stream"`), nil
+}

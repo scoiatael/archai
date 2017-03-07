@@ -36,3 +36,7 @@ func (a Migrate) Run(c Context) error {
 	}
 	return nil
 }
+
+func (a Migrate) MarshalJSON() ([]byte, error) {
+	return []byte(`"Migrate Cassandra keyspace"`), nil
+}

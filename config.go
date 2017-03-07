@@ -8,6 +8,7 @@ import (
 	"github.com/scoiatael/archai/http"
 	"github.com/scoiatael/archai/persistence"
 	"github.com/scoiatael/archai/telemetry"
+	"github.com/scoiatael/archai/util"
 )
 
 // Config is a context for all application actions.
@@ -21,6 +22,10 @@ type Config struct {
 	provider    persistence.Provider
 	telemetry   telemetry.Datadog
 	initialized bool
+}
+
+func (c *Config) Append(action actions.Action) {
+	c.Actions = append(c.Actions, action)
 }
 
 func (c Config) HandleErr(err error) {
@@ -83,4 +88,8 @@ func (c Config) Run() error {
 		}
 	}
 	return nil
+}
+
+func (c Config) PrettyPrint() {
+	util.PrettyPrint(c)
 }

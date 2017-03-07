@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"encoding/json"
+
 	"github.com/scoiatael/archai/http"
 	"github.com/scoiatael/archai/persistence"
 	"github.com/scoiatael/archai/telemetry"
@@ -23,4 +25,5 @@ type Context interface {
 
 type Action interface {
 	Run(Context) error
+	json.Marshaler
 }
