@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/scoiatael/archai/http"
@@ -12,6 +13,7 @@ type HttpHandler interface {
 	Get(string, func(http.GetContext))
 	Post(string, func(http.PostContext))
 	Run(string) error
+	Stop(context.Context)
 }
 
 type Context interface {
@@ -21,6 +23,7 @@ type Context interface {
 	HandleErr(error)
 	HttpHandler() HttpHandler
 	Telemetry() telemetry.Datadog
+	Concurrency() int
 }
 
 type Action interface {

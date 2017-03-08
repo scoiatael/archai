@@ -45,7 +45,7 @@ func (wj *WriteJob) Run(c Context) {
 func (hs HttpServer) Run(c Context) error {
 	handler := c.HttpHandler()
 	jobs := make(chan WriteJob, 50)
-	for w := 0; w < 3; w++ {
+	for w := 0; w < c.Concurrency(); w++ {
 		go writer(jobs, c)
 	}
 	handler.Get("/stream/:id", func(ctx http.GetContext) {

@@ -1,6 +1,8 @@
 package http
 
 import (
+	"context"
+
 	"gopkg.in/kataras/iris.v6"
 
 	"github.com/scoiatael/archai/simplejson"
@@ -80,4 +82,8 @@ func (h *IrisHandler) Run(addr string) error {
 	h.framework.Listen(addr)
 
 	return nil
+}
+
+func (h *IrisHandler) Stop(ctx context.Context) {
+	h.framework.Shutdown(ctx)
 }

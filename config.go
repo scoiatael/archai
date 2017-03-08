@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"runtime"
 
 	"github.com/scoiatael/archai/actions"
 	"github.com/scoiatael/archai/http"
@@ -97,4 +98,8 @@ func (c Config) Run() error {
 
 func (c Config) PrettyPrint() {
 	util.PrettyPrint(c)
+}
+
+func (c Config) Concurrency() int {
+	return runtime.NumCPU()
 }
