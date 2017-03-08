@@ -14,9 +14,10 @@ type Provider interface {
 }
 
 type CassandraProvider struct {
-	Hosts    []string
-	Keyspace string
-	session  *Session
+	Hosts       []string
+	Keyspace    string
+	session     *Session
+	Replication string
 }
 
 func (cp *CassandraProvider) NewCluster() *gocql.ClusterConfig {
@@ -38,7 +39,7 @@ func (cp *CassandraProvider) Session() (Session, error) {
 	return nil, fmt.Errorf("Initialize CassandraProvider with NewProvider first")
 }
 
-const createKeySpace = `CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'class' : 'NetworkTopologyStrategy' };`
+const createKeySpace = `CREATE KEYSPACE IF NOT EXISTS %s WITH replication = %s;`
 
 func (c *CassandraProvider) createKeySpace() error {
 	cluster := c.NewCluster()
@@ -49,7 +50,7 @@ func (c *CassandraProvider) createKeySpace() error {
 		return errors.Wrap(err, "CreateSession failed")
 	}
 	defer sess.Close()
-	err = sess.Query(fmt.Sprintf(createKeySpace, c.Keyspace)).Exec()
+	err = sess.Query(fmt.Sprintf(createKeySpace, c.Keyspace, c.Replication)).Exec()
 	if err != nil {
 		return errors.Wrap(err, "Query to CreateKeyspace failed")
 	}
@@ -67,6 +68,9 @@ func (cp *CassandraProvider) MigrationSession() (MigrationSession, error) {
 }
 
 func (c *CassandraProvider) Init() error {
+	if len(c.Replication) == 0 {
+		c.Replication = "{ 'class' : 'SimpleStrategy', 'replication_factor' : 1 }"
+	}
 	err := c.createKeySpace()
 	if err != nil {
 		return err

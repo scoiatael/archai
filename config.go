@@ -13,11 +13,12 @@ import (
 
 // Config is a context for all application actions.
 type Config struct {
-	Keyspace   string
-	Hosts      []string
-	Actions    []actions.Action
-	StatsdAddr string
-	Features   map[string]bool
+	Keyspace        string
+	Hosts           []string
+	Actions         []actions.Action
+	StatsdAddr      string
+	Features        map[string]bool
+	ReplicationOpts string
 
 	provider    persistence.Provider
 	telemetry   telemetry.Datadog
@@ -64,8 +65,9 @@ func (c Config) HttpHandler() actions.HttpHandler {
 
 func (c *Config) Init() error {
 	new_provider := persistence.CassandraProvider{
-		Hosts:    c.Hosts,
-		Keyspace: c.Keyspace,
+		Hosts:       c.Hosts,
+		Keyspace:    c.Keyspace,
+		Replication: c.ReplicationOpts,
 	}
 	err := new_provider.Init()
 	if err != nil {

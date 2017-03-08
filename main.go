@@ -47,6 +47,11 @@ func main() {
 			Value: 8080,
 			Usage: "Port to listen on",
 		},
+		cli.StringFlag{
+			Name:  "replication",
+			Value: "",
+			Usage: "Cassandra keyspace replication options",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		config := Config{}
@@ -55,6 +60,7 @@ func main() {
 		config.Keyspace = c.String("keyspace")
 		config.Hosts = strings.Split(c.String("hosts"), ",")
 		config.StatsdAddr = c.String("telemetry")
+		config.ReplicationOpts = c.String("replication")
 		if c.Bool("migrate") {
 			config.Append(actions.Migrate{})
 		}
