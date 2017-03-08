@@ -38,7 +38,7 @@ func (cp *CassandraProvider) Session() (Session, error) {
 	return nil, fmt.Errorf("Initialize CassandraProvider with NewProvider first")
 }
 
-const createKeySpace = `CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };`
+const createKeySpace = `CREATE KEYSPACE IF NOT EXISTS %s WITH replication = { 'class' : 'NetworkTopologyStrategy' };`
 
 func (c *CassandraProvider) createKeySpace() error {
 	cluster := c.NewCluster()

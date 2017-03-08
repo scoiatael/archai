@@ -63,14 +63,17 @@ func (c Config) HttpHandler() actions.HttpHandler {
 }
 
 func (c *Config) Init() error {
-	new_provider := persistence.CassandraProvider{Hosts: c.Hosts, Keyspace: c.Keyspace}
+	new_provider := persistence.CassandraProvider{
+		Hosts:    c.Hosts,
+		Keyspace: c.Keyspace,
+	}
 	err := new_provider.Init()
 	if err != nil {
 		return err
 	}
 	c.provider = &new_provider
 
-	dd := telemetry.NewDatadog(c.StatsdAddr, c.Keyspace)
+	dd := telemetry.NewDatadog(c.StatsdAddr, "archai", c.Keyspace)
 	c.telemetry = dd
 
 	c.initialized = true

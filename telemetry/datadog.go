@@ -23,6 +23,7 @@ func (c *Client) on_error(err error) {
 
 func (c *Client) Failure(title, text string) {
 	if c.initialized {
+		title = c.client.Namespace + "." + title
 		ev := statsd.NewEvent(title, text)
 		ev.AlertType = statsd.Error
 		err := errors.Wrap(c.client.Event(ev), "Failed sending event to DataDog")
@@ -41,7 +42,7 @@ func (c *Client) Incr(name string, tags []string) {
 	}
 }
 
-func NewDatadog(addr string, namespace string) Datadog {
+func NewDatadog(addr string, namespace string, keyspace string) Datadog {
 	c, err := statsd.New(addr)
 	if err != nil {
 		client := &Client{}
@@ -49,5 +50,6 @@ func NewDatadog(addr string, namespace string) Datadog {
 		return client
 	}
 	c.Namespace = namespace + "."
+	c.Tags = append(c.Tags, "keyspace:"+keyspace)
 	return &Client{client: c, initialized: true}
 }
