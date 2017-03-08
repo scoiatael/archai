@@ -2,6 +2,8 @@ package http
 
 import (
 	"gopkg.in/kataras/iris.v6"
+
+	"github.com/scoiatael/archai/simplejson"
 )
 
 type IrisHttpContext struct {
@@ -43,8 +45,8 @@ type IrisPostContext struct {
 	IrisHttpContext
 }
 
-func (hc IrisPostContext) JsonBodyParams() (map[string]interface{}, error) {
-	sess := iris.Map{}
+func (hc IrisPostContext) JsonBodyParams() (simplejson.Object, error) {
+	sess := make(simplejson.Object)
 	err := hc.ReadJSON(&sess)
 
 	if err != nil {

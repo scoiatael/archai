@@ -1,5 +1,9 @@
 package http
 
+import (
+	"github.com/scoiatael/archai/simplejson"
+)
+
 type Context interface {
 	HandleErr(error)
 }
@@ -18,5 +22,5 @@ type GetContext interface {
 
 type PostContext interface {
 	HttpContext
-	JsonBodyParams() (map[string]interface{}, error)
+	JsonBodyParams() (simplejson.Object, error)
 }

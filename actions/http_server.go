@@ -14,8 +14,40 @@ type HttpServer struct {
 	Port int
 }
 
+type WriteJob struct {
+	payload simplejson.Object
+	stream  string
+}
+
+func writer(jobs <-chan WriteJob, c Context) {
+	for j := range jobs {
+		j.Run(c)
+	}
+}
+
+func (wj *WriteJob) Run(c Context) {
+	payload, err := json.Marshal(wj.payload)
+	if err != nil {
+		c.HandleErr(err)
+		return
+	}
+	action := WriteEvent{Stream: wj.stream, Payload: payload, Meta: make(map[string]string)}
+	action.Meta["origin"] = "http"
+	action.Meta["compressed"] = "false"
+	err = action.Run(c)
+	if err != nil {
+		c.HandleErr(err)
+	} else {
+		c.Telemetry().Incr("write", []string{"stream:" + wj.stream})
+	}
+}
+
 func (hs HttpServer) Run(c Context) error {
 	handler := c.HttpHandler()
+	jobs := make(chan WriteJob, 50)
+	for w := 0; w < 3; w++ {
+		go writer(jobs, c)
+	}
 	handler.Get("/stream/:id", func(ctx http.GetContext) {
 		stream := ctx.GetSegment("id")
 		action := ReadEvents{Stream: stream}
@@ -51,23 +83,9 @@ func (hs HttpServer) Run(c Context) error {
 			// Error was already sent
 			return
 		}
-		payload, err := json.Marshal(body)
-		if err != nil {
-			c.HandleErr(err)
-			ctx.ServerErr(err)
-			return
-		}
-		action := WriteEvent{Stream: stream, Payload: payload, Meta: make(map[string]string)}
-		action.Meta["origin"] = "http"
-		action.Meta["compressed"] = "false"
-		err = action.Run(c)
-		if err != nil {
-			c.HandleErr(err)
-			ctx.ServerErr(err)
-		} else {
-			c.Telemetry().Incr("write", []string{"stream:" + stream})
-			ctx.SendJson("OK")
-		}
+
+		jobs <- WriteJob{stream: stream, payload: body}
+		ctx.SendJson("OK")
 	})
 
 	connString := fmt.Sprintf("%s:%d", hs.Addr, hs.Port)

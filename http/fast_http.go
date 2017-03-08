@@ -8,6 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
+
+	"github.com/scoiatael/archai/simplejson"
 )
 
 type FastHttpContext struct {
@@ -63,9 +65,9 @@ type FastHttpPostContext struct {
 
 const expectedJSON = `{ "error": "expected JSON body" }`
 
-func (pc FastHttpPostContext) JsonBodyParams() (map[string]interface{}, error) {
+func (pc FastHttpPostContext) JsonBodyParams() (simplejson.Object, error) {
 	body := pc.PostBody()
-	read := make(map[string]interface{})
+	read := make(simplejson.Object)
 	err := json.Unmarshal(body, &read)
 	if err != nil {
 		pc.Error(expectedJSON, fasthttp.StatusBadRequest)
