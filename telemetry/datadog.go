@@ -23,7 +23,7 @@ func (c *Client) on_error(err error) {
 
 func (c *Client) Failure(title, text string) {
 	if c.initialized {
-		title = c.client.Namespace + "." + title
+		title = c.client.Namespace + title
 		ev := statsd.NewEvent(title, text)
 		ev.AlertType = statsd.Error
 		err := errors.Wrap(c.client.Event(ev), "Failed sending event to DataDog")
