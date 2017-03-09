@@ -48,6 +48,9 @@ func (hs HttpServer) Run(c Context) error {
 	for w := 0; w < c.Concurrency(); w++ {
 		go writer(jobs, c)
 	}
+	handler.Get("/_check", func(ctx http.GetContext) {
+		ctx.SendJson("OK")
+	})
 	handler.Get("/stream/:id", func(ctx http.GetContext) {
 		stream := ctx.GetSegment("id")
 		action := ReadEvents{Stream: stream}

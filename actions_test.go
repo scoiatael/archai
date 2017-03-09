@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	. "github.com/scoiatael/archai"
 	"github.com/scoiatael/archai/actions"
@@ -54,6 +55,7 @@ var _ = Describe("Actions", func() {
 		})
 		JustBeforeEach(func() {
 			go action.Run(config)
+			time.Sleep(10 * time.Millisecond)
 			address = fmt.Sprintf("http://127.0.0.1:%d", action.Port)
 		})
 
@@ -87,8 +89,9 @@ var _ = Describe("Actions", func() {
 					event.Run(config)
 
 				})
-				It("allows reading events", func() {
-					resp, err := http.Get(address)
+
+				get := func(query string) interface{} {
+					resp, err := http.Get(address + query)
 
 					Expect(err).NotTo(HaveOccurred())
 					body, err := ioutil.ReadAll(resp.Body)
@@ -96,7 +99,19 @@ var _ = Describe("Actions", func() {
 					js := make(map[string]interface{})
 					err = json.Unmarshal(body, &js)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(js["results"]).NotTo(BeEmpty())
+					return js["results"]
+				}
+
+				It("allows reading events", func() {
+					results := get("")
+					Expect(results).NotTo(BeEmpty())
+					Expect(results).To(HaveLen(1))
+				})
+				It("allows reading events with cursor", func() {
+					cursor := get("").([]interface{})[0].(map[string]interface{})["ID"].(string)
+
+					results := get("?cursor=" + cursor)
+					Expect(results).To(BeEmpty())
 				})
 			})
 		})

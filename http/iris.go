@@ -31,11 +31,11 @@ type IrisGetContext struct {
 }
 
 func (hc IrisHttpContext) StringParam(index string) string {
-	return hc.Param(index)
+	return hc.URLParam(index)
 }
 
 func (hc IrisHttpContext) IntParam(index string, def int) int {
-	val, err := hc.ParamInt(index)
+	val, err := hc.URLParamInt(index)
 	if err != nil {
 		return def
 	}
