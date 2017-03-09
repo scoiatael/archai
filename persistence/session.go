@@ -11,6 +11,7 @@ import (
 type Session interface {
 	WriteEvent(string, []byte, map[string]string) error
 	ReadEvents(string, string, int) ([]types.Event, error)
+	ListStreams() ([]string, error)
 	Close()
 }
 
@@ -58,4 +59,17 @@ func (sess *CassandraSession) ReadEvents(stream string, cursor string, amount in
 	}
 	err = iter.Close()
 	return events, errors.Wrap(err, "Failed readEvent")
+}
+
+const listStreams = `SELECT DISTINCT stream FROM events`
+
+func (sess *CassandraSession) ListStreams() ([]string, error) {
+	iter := sess.Query(listStreams).Iter()
+	rows, err := iter.SliceMap()
+	streams := make([]string, len(rows))
+	for i, r := range rows {
+		streams[i] = r["stream"].(string)
+	}
+	err = iter.Close()
+	return streams, errors.Wrap(err, "Failed listStreams")
 }

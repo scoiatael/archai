@@ -52,6 +52,10 @@ func main() {
 			Value: "",
 			Usage: "Cassandra keyspace replication options",
 		},
+		cli.BoolFlag{
+			Name:  "list-streams",
+			Usage: "List streams in Cassandra",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		config := Config{}
@@ -63,6 +67,9 @@ func main() {
 		config.ReplicationOpts = c.String("replication")
 		if c.Bool("migrate") {
 			config.Append(actions.Migrate{})
+		}
+		if c.Bool("list-streams") {
+			config.Append(actions.ListStreams{})
 		}
 		if c.Bool("dev-logger") {
 			config.Features["dev_logger"] = true

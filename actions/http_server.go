@@ -113,6 +113,19 @@ func (hs HttpServer) Run(c Context) error {
 	handler.Get("/_check", func(ctx http.GetContext) {
 		ctx.SendJson("OK")
 	})
+	handler.Get("/streams", func(ctx http.GetContext) {
+		session, err := c.Persistence().Session()
+		err = errors.Wrap(err, "Obtaining session failed")
+		if err != nil {
+			c.HandleErr(err)
+			ctx.ServerErr(err)
+			return
+		}
+		streams, err := session.ListStreams()
+		view := make(simplejson.Object)
+		view["streams"] = streams
+		ctx.SendJson(view)
+	})
 	handler.Get("/stream/:id", func(ctx http.GetContext) {
 		stream := ctx.GetSegment("id")
 		action := ReadEvents{Stream: stream}
