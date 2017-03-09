@@ -11,6 +11,7 @@ import (
 
 	. "github.com/scoiatael/archai"
 	"github.com/scoiatael/archai/actions"
+	"github.com/scoiatael/archai/simplejson"
 	"github.com/scoiatael/archai/util"
 
 	. "github.com/onsi/ginkgo"
@@ -61,6 +62,40 @@ var _ = Describe("Actions", func() {
 
 		AfterEach(func() {
 			action.Stop()
+		})
+
+		Describe("/bulk/stream/:id", func() {
+			JustBeforeEach(func() {
+				stream = util.RandomString(10)
+				address = fmt.Sprintf("%s/bulk/stream/%s", address, stream)
+				buf = bytes.NewBufferString(`{ "data": [["foo",1,2,3], ["bar",4,5,6]], "schema": ["name", "likes", "shares", "comments"] }`)
+			})
+
+			It("allows writing events", func() {
+				resp, err := http.Post(address, "application/json", buf)
+
+				Expect(err).NotTo(HaveOccurred())
+				body, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(body)).To(Equal(`"OK"`))
+
+				time.Sleep(10 * time.Millisecond)
+
+				action := actions.ReadEvents{}
+				action.Amount = 5
+				action.Stream = stream
+				err = action.Run(config)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(action.Events).NotTo(BeEmpty())
+				Expect(action.Events).To(HaveLen(2))
+
+				js, err := simplejson.Read(action.Events[0].Blob)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(js["name"]).To(Equal("foo"))
+				Expect(js["likes"]).To(Equal(1.0))
+				Expect(js["shares"]).To(Equal(2.0))
+				Expect(js["comments"]).To(Equal(3.0))
+			})
 		})
 
 		Describe("/stream/:id", func() {
