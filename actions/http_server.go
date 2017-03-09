@@ -27,6 +27,7 @@ func writer(jobs <-chan WriteJob, c Context) {
 
 func (wj *WriteJob) Run(c Context) {
 	payload, err := json.Marshal(wj.payload)
+	err = errors.Wrap(err, "HTTP server marshalling payload to write event")
 	if err != nil {
 		c.HandleErr(err)
 		return
@@ -36,7 +37,7 @@ func (wj *WriteJob) Run(c Context) {
 	action.Meta["compressed"] = "false"
 	err = action.Run(c)
 	if err != nil {
-		c.HandleErr(err)
+		c.HandleErr(errors.Wrap(err, "HTTP server writing event"))
 	} else {
 		c.Telemetry().Incr("write", []string{"stream:" + wj.stream})
 	}
@@ -56,7 +57,7 @@ func (hs HttpServer) Run(c Context) error {
 		action := ReadEvents{Stream: stream}
 		action.Cursor = ctx.StringParam("cursor")
 		action.Amount = ctx.IntParam("amount", 10)
-		err := action.Run(c)
+		err := errors.Wrap(action.Run(c), "HTTP server reading events")
 		if err != nil {
 			c.HandleErr(err)
 			ctx.ServerErr(err)
@@ -67,6 +68,7 @@ func (hs HttpServer) Run(c Context) error {
 				events[i] = make(simplejson.Object)
 				events[i]["ID"] = ev.ID
 				payload, err := simplejson.Read(ev.Blob)
+				err = errors.Wrap(err, "HTTP server marshalling response with read events")
 				if err != nil {
 					c.HandleErr(err)
 					ctx.ServerErr(err)
