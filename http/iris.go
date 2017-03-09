@@ -19,7 +19,7 @@ func (hc IrisHttpContext) SendJson(response interface{}) {
 
 func (hc IrisHttpContext) ServerErr(err error) {
 	hc.context.HandleErr(err)
-	hc.JSON(iris.StatusInternalServerError, iris.Map{"error": err})
+	hc.JSON(iris.StatusInternalServerError, iris.Map{"error": err.Error()})
 }
 
 func (hc IrisHttpContext) GetSegment(index string) string {
