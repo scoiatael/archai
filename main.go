@@ -68,6 +68,7 @@ func main() {
 		if c.Bool("migrate") {
 			config.Append(actions.Migrate{})
 		}
+		config.Append(actions.StartWorker{})
 		if c.Bool("list-streams") {
 			config.Append(actions.ListStreams{})
 		}

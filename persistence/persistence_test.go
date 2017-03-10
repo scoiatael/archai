@@ -66,8 +66,10 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	root_sess.Query(fmt.Sprintf("truncate table %s.events", testingKeyspace)).Exec()
-	root_sess.Close()
+	if root_sess != nil {
+		root_sess.Query(fmt.Sprintf("truncate table %s.events", testingKeyspace)).Exec()
+		root_sess.Close()
+	}
 })
 
 var _ = Describe("Persistence", func() {

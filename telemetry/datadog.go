@@ -10,6 +10,7 @@ import (
 type Datadog interface {
 	Incr(name string, tags []string)
 	Failure(title, text string)
+	Gauge(name string, tags []string, value int)
 }
 
 type Client struct {
@@ -36,6 +37,15 @@ func (c *Client) Failure(title, text string) {
 func (c *Client) Incr(name string, tags []string) {
 	if c.initialized {
 		err := c.client.Incr(name, tags, 1.0)
+		if err != nil {
+			c.on_error(err)
+		}
+	}
+}
+
+func (c *Client) Gauge(name string, tags []string, value int) {
+	if c.initialized {
+		err := c.client.Gauge(name, float64(value), tags, 1.0)
 		if err != nil {
 			c.on_error(err)
 		}

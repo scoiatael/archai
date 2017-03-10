@@ -2,6 +2,8 @@ package actions
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -24,4 +26,22 @@ func (we WriteEvent) Run(c Context) error {
 
 func (we WriteEvent) MarshalJSON() ([]byte, error) {
 	return []byte(`"Insert event to Cassandra stream"`), nil
+}
+
+func persistEvent(stream string, payload []byte, origin string, c Context) error {
+	var err error
+	for i := 0; i < c.Retries(); i += 1 {
+		action := WriteEvent{Stream: stream, Payload: payload, Meta: make(map[string]string)}
+		action.Meta["origin"] = origin
+		action.Meta["compressed"] = "false"
+		action.Meta["time"] = string(time.Now().Unix())
+		err = action.Run(c)
+		if err == nil {
+			break
+		}
+		time.Sleep(c.Backoff(i))
+		c.Telemetry().Incr("persist.retries", []string{"stream" + stream})
+		log.Println("Retrying persistEvent, because of", err)
+	}
+	return err
 }

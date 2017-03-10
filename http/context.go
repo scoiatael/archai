@@ -23,4 +23,5 @@ type GetContext interface {
 type PostContext interface {
 	HttpContext
 	JsonBodyParams() (simplejson.Object, error)
+	ReadJSON(interface{}) error
 }

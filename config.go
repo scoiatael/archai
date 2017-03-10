@@ -25,6 +25,7 @@ type Config struct {
 
 	provider    persistence.Provider
 	telemetry   telemetry.Datadog
+	jobs        chan actions.Action
 	initialized bool
 }
 
@@ -81,6 +82,8 @@ func (c *Config) Init() error {
 	dd := telemetry.NewDatadog(c.StatsdAddr, "archai", c.Keyspace)
 	c.telemetry = dd
 
+	c.jobs = make(chan actions.Action, 50)
+
 	c.initialized = true
 	return nil
 }
@@ -112,4 +115,8 @@ func (c Config) Retries() int {
 
 func (c Config) Backoff(attempt int) time.Duration {
 	return time.Duration(math.Pow10(attempt)) * time.Millisecond
+}
+
+func (c Config) BackgroundJobs() chan actions.Action {
+	return c.jobs
 }
