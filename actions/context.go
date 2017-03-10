@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/scoiatael/archai/http"
 	"github.com/scoiatael/archai/persistence"
@@ -24,6 +25,8 @@ type Context interface {
 	HttpHandler() HttpHandler
 	Telemetry() telemetry.Datadog
 	Concurrency() int
+	Retries() int
+	Backoff(int) time.Duration
 }
 
 type Action interface {

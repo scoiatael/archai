@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"runtime"
+	"time"
 
 	"github.com/scoiatael/archai/actions"
 	"github.com/scoiatael/archai/http"
@@ -102,4 +104,12 @@ func (c Config) PrettyPrint() {
 
 func (c Config) Concurrency() int {
 	return runtime.NumCPU()
+}
+
+func (c Config) Retries() int {
+	return 3
+}
+
+func (c Config) Backoff(attempt int) time.Duration {
+	return time.Duration(math.Pow10(attempt)) * time.Millisecond
 }

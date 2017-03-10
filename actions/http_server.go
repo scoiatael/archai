@@ -3,6 +3,7 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"time"
 
@@ -22,11 +23,21 @@ type BackgroundJob interface {
 }
 
 func persistEvent(stream string, payload []byte, origin string, c Context) error {
-	action := WriteEvent{Stream: stream, Payload: payload, Meta: make(map[string]string)}
-	action.Meta["origin"] = origin
-	action.Meta["compressed"] = "false"
-	action.Meta["time"] = string(time.Now().Unix())
-	return action.Run(c)
+	var err error
+	for i := 0; i < c.Retries(); i += 1 {
+		action := WriteEvent{Stream: stream, Payload: payload, Meta: make(map[string]string)}
+		action.Meta["origin"] = origin
+		action.Meta["compressed"] = "false"
+		action.Meta["time"] = string(time.Now().Unix())
+		err = action.Run(c)
+		if err == nil {
+			break
+		}
+		time.Sleep(c.Backoff(i))
+		c.Telemetry().Incr("persist.retries", []string{"stream" + stream})
+		log.Println("Retrying persistEvent, because of", err)
+	}
+	return err
 }
 
 type WriteJob struct {
@@ -93,7 +104,7 @@ func (wj BulkWriteJob) Run(c Context) {
 		if err != nil {
 			c.HandleErr(errors.Wrap(err, "HTTP server bulk_writing events"))
 		} else {
-			c.Telemetry().Incr("bulk_write.singular", []string{"stream:" + wj.stream})
+			c.Telemetry().Incr("write", []string{"stream:" + wj.stream})
 		}
 	}
 }
@@ -117,7 +128,6 @@ func (hs HttpServer) Run(c Context) error {
 		session, err := c.Persistence().Session()
 		err = errors.Wrap(err, "Obtaining session failed")
 		if err != nil {
-			c.HandleErr(err)
 			ctx.ServerErr(err)
 			return
 		}
@@ -133,26 +143,25 @@ func (hs HttpServer) Run(c Context) error {
 		action.Amount = ctx.IntParam("amount", 10)
 		err := errors.Wrap(action.Run(c), "HTTP server reading events")
 		if err != nil {
-			c.HandleErr(err)
 			ctx.ServerErr(err)
-		} else {
-			root := make(simplejson.Object)
-			events := make(simplejson.ObjectArray, len(action.Events))
-			for i, ev := range action.Events {
-				events[i] = make(simplejson.Object)
-				events[i]["ID"] = ev.ID
-				payload, err := simplejson.Read(ev.Blob)
-				err = errors.Wrap(err, "HTTP server marshalling response with read events")
-				if err != nil {
-					c.HandleErr(err)
-					ctx.ServerErr(err)
-				}
-				events[i]["blob"] = payload
-			}
-			root["results"] = events
-			c.Telemetry().Incr("read", []string{"stream:" + stream})
-			ctx.SendJson(root)
+			return
 		}
+		root := make(simplejson.Object)
+		events := make(simplejson.ObjectArray, len(action.Events))
+		for i, ev := range action.Events {
+			events[i] = make(simplejson.Object)
+			events[i]["ID"] = ev.ID
+			payload, err := simplejson.Read(ev.Blob)
+			err = errors.Wrap(err, "HTTP server marshalling response with read events")
+			if err != nil {
+				c.HandleErr(err)
+				ctx.ServerErr(err)
+			}
+			events[i]["blob"] = payload
+		}
+		root["results"] = events
+		c.Telemetry().Incr("read", []string{"stream:" + stream})
+		ctx.SendJson(root)
 	})
 	handler.Post("/bulk/stream/:id", func(ctx http.PostContext) {
 		var err error

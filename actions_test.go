@@ -79,7 +79,7 @@ var _ = Describe("Actions", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(body)).To(Equal(`"OK"`))
 
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(20 * time.Millisecond)
 
 				action := actions.ReadEvents{}
 				action.Amount = 5
