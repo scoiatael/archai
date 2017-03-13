@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	. "github.com/scoiatael/archai"
 	"github.com/scoiatael/archai/actions"
 	"github.com/scoiatael/archai/simplejson"
 	"github.com/scoiatael/archai/util"
@@ -17,27 +16,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-const testingKeyspace = "archai_test"
-
-var (
-	config Config
-)
-
-var _ = BeforeSuite(func() {
-	config = Config{}
-	config.Hosts = []string{"127.0.0.1"}
-	config.Keyspace = testingKeyspace
-	config.StatsdAddr = "dd-agent.service.consul:8125"
-	err := config.Init()
-	if err != nil {
-		panic(err)
-	}
-})
-
-var _ = AfterSuite(func() {
-
-})
 
 var _ = Describe("Actions", func() {
 	Describe("HttpServer", func() {
@@ -79,7 +57,8 @@ var _ = Describe("Actions", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(body)).To(Equal(`"OK"`))
 
-				time.Sleep(20 * time.Millisecond)
+				write := <-config.BackgroundJobs()
+				write.Run(config)
 
 				action := actions.ReadEvents{}
 				action.Amount = 5
@@ -102,7 +81,7 @@ var _ = Describe("Actions", func() {
 			JustBeforeEach(func() {
 				stream = util.RandomString(10)
 				address = fmt.Sprintf("%s/stream/%s", address, stream)
-				buf = bytes.NewBufferString(`{ "foo": "bar" }`)
+				buf = bytes.NewBufferString(`{ "foo": "bar", "baz": 2 }`)
 			})
 
 			It("allows writing events", func() {
@@ -112,6 +91,22 @@ var _ = Describe("Actions", func() {
 				body, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(body)).To(Equal(`"OK"`))
+
+				write := <-config.BackgroundJobs()
+				write.Run(config)
+
+				action := actions.ReadEvents{}
+				action.Amount = 5
+				action.Stream = stream
+				err = action.Run(config)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(action.Events).NotTo(BeEmpty())
+				Expect(action.Events).To(HaveLen(1))
+
+				js, err := simplejson.Read(action.Events[0].Blob)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(js["foo"]).To(Equal("bar"))
+				Expect(js["baz"]).To(Equal(2.0))
 			})
 
 			Context("After some event was written", func() {
@@ -125,7 +120,7 @@ var _ = Describe("Actions", func() {
 
 				})
 
-				get := func(query string) interface{} {
+				get := func(query string) map[string]interface{} {
 					resp, err := http.Get(address + query)
 
 					Expect(err).NotTo(HaveOccurred())
@@ -134,18 +129,18 @@ var _ = Describe("Actions", func() {
 					js := make(map[string]interface{})
 					err = json.Unmarshal(body, &js)
 					Expect(err).NotTo(HaveOccurred())
-					return js["results"]
+					return js
 				}
 
 				It("allows reading events", func() {
-					results := get("")
+					results := get("")["results"]
 					Expect(results).NotTo(BeEmpty())
 					Expect(results).To(HaveLen(1))
 				})
 				It("allows reading events with cursor", func() {
-					cursor := get("").([]interface{})[0].(map[string]interface{})["ID"].(string)
+					cursor := get("")["cursor"].(map[string]interface{})["next"].(string)
 
-					results := get("?cursor=" + cursor)
+					results := get("?cursor=" + cursor)["results"]
 					Expect(results).To(BeEmpty())
 				})
 			})

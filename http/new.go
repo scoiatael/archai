@@ -24,7 +24,3 @@ func NewIris(c Context, useDevLogger bool) *IrisHandler {
 	handler.framework = app
 	return &handler
 }
-
-func NewFastHttp(c Context) *FastHttpHandler {
-	return &FastHttpHandler{Context: c}
-}

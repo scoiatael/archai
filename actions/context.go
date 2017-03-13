@@ -18,6 +18,7 @@ type HttpHandler interface {
 }
 
 type Context interface {
+	BackgroundJobs() chan Action
 	Persistence() persistence.Provider
 	Migrations() map[string]persistence.Migration
 	Version() string
