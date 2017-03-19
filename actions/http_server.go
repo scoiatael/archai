@@ -39,6 +39,7 @@ func (hs HttpServer) Run(c Context) error {
 	jobs := c.BackgroundJobs()
 	handler_context := handlers.Handler{HandlerContext{c}}
 	handler.Get("/_check", func(ctx http.GetContext) { ctx.SendJson("OK") })
+	handler.Get("/", handler_context.Index)
 	handler.Get("/streams", handler_context.GetStreams)
 	handler.Get("/stream/:id", handler_context.GetStream)
 	handler.Post("/bulk/stream/:id", func(ctx http.PostContext) {

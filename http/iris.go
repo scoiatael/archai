@@ -17,6 +17,10 @@ func (hc IrisHttpContext) SendJson(response interface{}) {
 	hc.JSON(iris.StatusOK, response)
 }
 
+func (hc IrisHttpContext) SendHtml(response string) {
+	hc.HTML(iris.StatusOK, response)
+}
+
 func (hc IrisHttpContext) ServerErr(err error) {
 	hc.context.HandleErr(err)
 	hc.JSON(iris.StatusInternalServerError, iris.Map{"error": err.Error()})

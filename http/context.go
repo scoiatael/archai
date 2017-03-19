@@ -10,6 +10,7 @@ type Context interface {
 
 type HttpContext interface {
 	SendJson(interface{})
+	SendHtml(string)
 	GetSegment(string) string
 	ServerErr(error)
 }
