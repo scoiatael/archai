@@ -12,6 +12,7 @@ const index = `
   <title>Archai</title>
   <meta name="description" content="Simple page for interacting with Archai">
   <meta name="author" content="scoiatael">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css" integrity="sha256-mDRlQYEnF3BuKJadRTD48MaEv4+tX8GVP9dEvjZRv3c=" crossorigin="anonymous" />
 
   <!--[if lt IE 9]>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
@@ -27,19 +28,28 @@ const index = `
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js" integrity="sha256-abuKx2bTKkpnebr/MelhYjv6tAZvfBQ2VKxpi2yJ57o=" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/react-router-dom/umd/react-router-dom.min.js"></script>
 	<script type="text/babel">
-	const Streams = ({streams, onClick}) => {
+	const { HashRouter, Route, Link } = ReactRouterDOM
+
+	const Streams = ({streams}) => {
 		let items = streams.map((stream) => {
-		    let click = () => { onClick(stream) };
-			return <li onClick={click} key={stream}>{stream}</li>
+			let to = "/stream/" + stream
+			return <Link to={to} className="collection-item" key={stream}>{stream}</Link>
 		});
-		return <ul>{items}</ul>;
+		return(
+			<div className="container">
+				<div className="row">
+					<ul className="collection">{items}</ul>
+				</div>
+			</div>);
 	}
 
 	class Stream extends React.Component {
 		constructor(props) {
 			super(props);
-			this.name = props.name;
+			this.name = props.match.params.name;
 			this.state = { "results": [] };
 		}
 
@@ -51,16 +61,23 @@ const index = `
 
 		render() {
 			let items = this.state.results.map((result, index) =>
-				<li key={index}>{JSON.stringify(result)}</li>
+				<li className="collection-item" key={index}>{JSON.stringify(result)}</li>
 			);
-			return <ul>{items}</ul>;
+			return(
+				<div className="container">
+					<div className="row">
+						<h3>{this.name}</h3>
+						<ul className="collection">{items}</ul>
+					</div>
+				</div>
+			);
 		}
 	}
 
 	class App extends React.Component {
 		constructor(props) {
 			super(props);
-			this.state = { "streams": [], "screen": "streams" };
+			this.state = { "streams": [] };
 		}
 
 		componentDidMount() {
@@ -69,20 +86,18 @@ const index = `
 			});
 		}
 
-		setStream(name) {
-			this.setState({ "screen": "stream", "stream": name});
-		}
-
 		render() {
-			if(this.state.screen == "stream") {
-				return <Stream name={this.state.stream} />;
-			}
-			return <Streams streams={this.state.streams} onClick={this.setStream.bind(this)} />;
+			return <Streams streams={this.state.streams} />;
 		}
 	}
 
 	ReactDOM.render(
-		<App />,
+		<HashRouter>
+			<div>
+				<Route exact path="/" component={App}/>
+				<Route path="/stream/:name" component={Stream}/>
+			</div>
+		</HashRouter>,
 		document.getElementById('app')
 	);
 	</script>
