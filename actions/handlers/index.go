@@ -49,26 +49,46 @@ const index = `
 	class Stream extends React.Component {
 		constructor(props) {
 			super(props);
-			this.name = props.match.params.name;
+			this.updateProps(props);
 			this.state = { "results": [] };
 		}
 
-		componentDidMount() {
-			$.getJSON('/stream/' + this.name, (data) => {
+		componentWillReceiveProps(props) {
+			this.updateProps(props);
+			this.fetchData();
+		}
+
+		updateProps(props) {
+			this.name = props.match.params.name;
+			this.cursor = props.match.params.cursor || '';
+		}
+
+		fetchData() {
+			$.getJSON('/stream/' + this.name + "?cursor=" + this.cursor, (data) => {
 				this.setState(data);
 			});
+		}
+
+		componentDidMount() {
+			this.fetchData();
 		}
 
 		render() {
 			let items = this.state.results.map((result, index) =>
 				<li className="collection-item" key={index}>{JSON.stringify(result)}</li>
 			);
+			let more = '';
+			let cursor = this.state.cursor && this.state.cursor.next;
+			if (cursor) {
+				more = <Link to={"/stream/" + this.name + "/" + cursor }>More</Link>;
+			}
 			return(
 				<div className="container">
 					<div className="row">
 						<h3>{this.name}</h3>
 						<ul className="collection">{items}</ul>
 					</div>
+					{ more }
 				</div>
 			);
 		}
@@ -95,7 +115,8 @@ const index = `
 		<HashRouter>
 			<div>
 				<Route exact path="/" component={App}/>
-				<Route path="/stream/:name" component={Stream}/>
+				<Route exact path="/stream/:name" component={Stream}/>
+				<Route path="/stream/:name/:cursor" component={Stream}/>
 			</div>
 		</HashRouter>,
 		document.getElementById('app')
