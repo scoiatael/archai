@@ -8,5 +8,11 @@ archai: $(shell find . -type f -regex .*go$)
 siege:
 	bash scripts/siege.sh
 
-test:
+docker-compose: docker-compose.yml
+	docker-compose up -d
+
+migrate-test: archai
+	./archai --migrate --keyspace archai_test
+
+test: docker-compose migrate-test
 	ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --progress

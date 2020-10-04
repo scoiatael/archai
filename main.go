@@ -56,6 +56,10 @@ func main() {
 			Name:  "list-streams",
 			Usage: "List streams in Cassandra",
 		},
+		cli.BoolFlag{
+			Name:  "http-server",
+			Usage: "start HTTP server",
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		config := Config{}
@@ -75,9 +79,11 @@ func main() {
 		if c.Bool("dev-logger") {
 			config.Features["dev_logger"] = true
 		}
-		config.Append(actions.HttpServer{
-			Port: c.Int("port"),
-			Addr: c.String("listen")})
+		if c.Bool("http-server") {
+			config.Append(actions.HttpServer{
+				Port: c.Int("port"),
+				Addr: c.String("listen")})
+		}
 		config.PrettyPrint()
 		return config.Run()
 	}

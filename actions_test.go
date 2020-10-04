@@ -58,7 +58,8 @@ var _ = Describe("Actions", func() {
 				Expect(string(body)).To(Equal(`"OK"`))
 
 				write := <-config.BackgroundJobs()
-				write.Run(config)
+				err = write.Run(config)
+				Expect(err).NotTo(HaveOccurred())
 
 				action := actions.ReadEvents{}
 				action.Amount = 5
