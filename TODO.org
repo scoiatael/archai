@@ -1,0 +1,9 @@
+#+TITLE: Todo
+I'd consider this to be post-1.0.0, since it's been used in production for a couple of years fairly modern deployments (> 10k datapoints per second). Sadly most of the codebase has been in private hands, so I'm coming back to this one.
+* 2.0.0
+** TODO Remove ~iris~ in favor of ~fasthttprouter~
+** TODO Support writing data points to default epoch (e.g. ISO week)
+** TODO Support "files" persistence
+** TODO CI/CD
+* 2.1.0
+** TODO Clean up Cassandra migrations
